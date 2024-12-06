@@ -1,8 +1,5 @@
 /* eslint-disable camelcase */
 /* eslint-disable no-undef */
-/* eslint-disable linebreak-style */
-/* eslint-disable no-trailing-spaces */
-
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
@@ -11,29 +8,43 @@ const productSchema = new mongoose.Schema({
     required: [true, 'Product name is required'],
     trim: true
   },
-  description: {
-    type: String,
-    required: [true, 'Description is required']
-  },
   category: {
     type: String,
     required: [true, 'Category is required'],
     enum: ['Logam', 'Plastik', 'Kertas', 'Elektronik']
   },
-  price: {
-    type: Number,
-    required: [true, 'Price is required'],
-    min: 0
-  },
-  quantity: {
+  description: {
     type: String,
-    required: [true, 'Quantity is required']
+    required: [true, 'Description is required']
+  },
+  price: {
+    amount: {
+      type: Number,
+      required: [true, 'Price is required'],
+      min: 0
+    },
+    negotiable: {
+      type: Boolean,
+      default: true
+    }
+  },
+  stock: {
+    amount: {
+      type: Number,
+      required: [true, 'Stock amount is required'],
+      min: 0
+    },
+    unit: {
+      type: String,
+      required: [true, 'Stock unit is required'],
+      enum: ['kg', 'pcs']
+    }
   },
   location: {
     type: {
       type: String,
       enum: ['Point'],
-      default: 'Point'
+      required: true
     },
     coordinates: {
       type: [Number],
@@ -42,7 +53,10 @@ const productSchema = new mongoose.Schema({
     address: String
   },
   images: [{
-    url: String,
+    url: {
+      type: String,
+      required: true
+    },
     is_primary: {
       type: Boolean,
       default: false
@@ -57,14 +71,12 @@ const productSchema = new mongoose.Schema({
     type: String,
     enum: ['available', 'sold', 'reserved'],
     default: 'available'
-  },
-  condition: String
+  }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+  timestamps: true
 });
 
+// Create geospatial index
 productSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Product', productSchema);

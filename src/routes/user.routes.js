@@ -6,14 +6,18 @@ const { protect } = require('../middleware/auth.middleware');
 const {
   getProfile,
   updateProfile,
-  getUserById
+  findNearbySellers,
+  findNearbyBuyers
 } = require('../controllers/user.controller');
-const { uploadPhoto, resizePhoto } = require('../utils/file.handler');
-
-router.get('/:id', getUserById);
 
 router.use(protect);
+
+// Profile routes
 router.get('/profile', getProfile);
-router.patch('/profile', uploadPhoto, resizePhoto, updateProfile);
+router.patch('/profile', updateProfile);
+
+// Search routes
+router.get('/nearby-sellers', findNearbySellers);
+router.get('/nearby-buyers', findNearbyBuyers);
 
 module.exports = router;

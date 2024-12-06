@@ -1,8 +1,6 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
-/* eslint-disable linebreak-style */
-/* eslint-disable no-trailing-spaces */
-
+// src/models/user.model.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -22,7 +20,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: 8,
     select: false
   },
   name: {
@@ -31,21 +28,36 @@ const userSchema = new mongoose.Schema({
   },
   phone: String,
   profileImage: String,
-  coverImage: String,
-  bio: String,
-  location: String,
-  isVerified: {
-    type: Boolean,
-    default: false
+  address: String,
+  city: String,
+  postalCode: String,
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      default: [106.816666, -6.200000] // Default ke Jakarta
+    },
+    address: {
+      type: String,
+      default: ''
+    },
+    radius: {
+      type: Number,
+      default: 5
+    }
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
   },
   rating: {
     type: Number,
     default: 0
-  },
-  role: {
-    type: String,
-    enum: ['user', 'collector', 'admin'],
-    default: 'user'
   },
   joinedAt: {
     type: Date,
@@ -54,6 +66,9 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Index untuk query geospatial
+userSchema.index({ location: '2dsphere' });
 
 // Hash password sebelum disimpan
 userSchema.pre('save', async function (next) {

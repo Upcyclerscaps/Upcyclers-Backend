@@ -1,5 +1,6 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
+
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth.middleware');
@@ -8,16 +9,20 @@ const {
   getProduct,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getUserProducts
 } = require('../controllers/product.controller');
-const { uploadPhoto } = require('../utils/file.handler');
 
+// Public routes
 router.get('/', getAllProducts);
 router.get('/:id', getProduct);
 
+// Protected routes - harus login
 router.use(protect);
-router.post('/', uploadPhoto, createProduct);
-router.patch('/:id', uploadPhoto, updateProduct);
+
+router.post('/', createProduct);
+router.patch('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
+router.get('/user', getUserProducts); // Route untuk mendapatkan produk user
 
 module.exports = router;
