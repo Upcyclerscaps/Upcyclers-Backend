@@ -1,69 +1,54 @@
 /* eslint-disable no-undef */
-/* eslint-disable linebreak-style */
-/* eslint-disable no-trailing-spaces */
-
 const Product = require('../models/product.model');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.getAllProducts = catchAsync(async (req, res) => {
-  const { category, location, minPrice, maxPrice, search } = req.query;
-
-  const query = {};
-
-  if (category) {
-    query.category = category;
-  }
-
-  if (location) {
-    query['location.address'] = { $regex: location, $options: 'i' };
-  }
-
-  if (minPrice || maxPrice) {
-    query.price = {};
-    if (minPrice) query.price.$gte = parseFloat(minPrice);
-    if (maxPrice) query.price.$lte = parseFloat(maxPrice);
-  }
-
-  if (search) {
-    query.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } }
-    ];
-  }
-
-  const products = await Product.find(query)
+  const products = await Product.find()
     .populate('seller', 'name rating')
     .sort('-createdAt');
 
+  const transformedProducts = products.map((product) => ({
+    _id: product._id,
+    name: product.name,
+    category: product.category,
+    description: product.description,
+    price: product.price,
+    quantity: product.quantity,
+    location: product.location,
+    images: product.images,
+    seller: product.seller,
+    status: product.status,
+    createdAt: product.createdAt
+  }));
+
   res.status(200).json({
     status: 'success',
-    results: products.length,
-    data: products
+    data: transformedProducts
+  });
+});
+
+exports.createProduct = catchAsync(async (req, res) => {
+  // Add seller info from authenticated user
+  req.body.seller = req.user._id;
+
+  const product = await Product.create(req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: product
   });
 });
 
 exports.getProduct = catchAsync(async (req, res, next) => {
   const product = await Product.findById(req.params.id)
-    .populate('seller', 'name rating phone');
+    .populate('seller', 'name profileImage phone');
 
   if (!product) {
     return next(new AppError('Product not found', 404));
   }
 
   res.status(200).json({
-    status: 'success',
-    data: product
-  });
-});
-
-exports.createProduct = catchAsync(async (req, res) => {
-  const product = await Product.create({
-    ...req.body,
-    seller: req.user._id
-  });
-
-  res.status(201).json({
     status: 'success',
     data: product
   });
@@ -100,4 +85,33 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
     status: 'success',
     data: null
   });
+});
+
+exports.getUserProducts = catchAsync(async (req, res) => {
+  // Debug log
+  console.log('Getting products for user:', req.user._id);
+
+  // Verify user authentication
+  if (!req.user?._id) {
+    throw new AppError('User not authenticated', 401);
+  }
+
+  try {
+    const products = await Product.find({
+      seller: req.user._id.toString() // Ensure proper type conversion
+    })
+      .sort('-createdAt');
+
+    // Debug log
+    console.log(`Found ${products.length} products`);
+
+    res.status(200).json({
+      status: 'success',
+      results: products.length,
+      data: products || []
+    });
+  } catch (error) {
+    console.error('Error finding products:', error);
+    throw new AppError('Error retrieving products', 500);
+  }
 });

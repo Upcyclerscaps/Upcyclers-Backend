@@ -3,7 +3,6 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 
-
 const Category = require('../models/category.model');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');

@@ -1,67 +1,124 @@
 /* eslint-disable linebreak-style */
-/* eslint-disable no-trailing-spaces */
 /* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-/* eslint-disable prefer-const */
-/* eslint-disable space-before-function-paren */
-/* eslint-disable arrow-parens */
-
 const User = require('../models/user.model');
+const Product = require('../models/product.model');
 const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
+const ItemService = require('../services/item.service');
 
-exports.updateProfile = catchAsync(async (req, res, next) => {
-  const updatableFields = ['name', 'phone', 'bio', 'location'];
-  const updateData = {};
+exports.getProfile = catchAsync(async (req, res) => {
+  const user = await User.findById(req.user._id);
 
-  updatableFields.forEach(field => {
-    if (req.body[field] !== undefined) {
-      updateData[field] = req.body[field];
+  // Get user stats (hanya products)
+  const products = await Product.countDocuments({ seller: user._id });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      ...user.toObject(),
+      totalProducts: products
     }
   });
+});
 
-  if (req.file) {
-    updateData.profileImage = `uploads/images/${req.file.filename}`;
-  }
-
-  const user = await User.findByIdAndUpdate(
-    req.user.id,
-    updateData,
+exports.updateProfile = catchAsync(async (req, res) => {
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      name: req.body.name,
+      phone: req.body.phone,
+      profileImage: req.body.profileImage,
+    },
     { new: true, runValidators: true }
   );
 
   res.status(200).json({
     status: 'success',
-    data: user
+    data: updatedUser
   });
 });
 
-exports.getUserProfile = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.params.id)
-    .select('-password');
-
-  if (!user) {
-    return next(new AppError('User not found', 404));
-  }
-
-  // Get user stats
-  const userStats = await Promise.all([
-    Product.countDocuments({ seller: user._id }),
-    Transaction.countDocuments({ 
-      $or: [{ seller: user._id }, { buyer: user._id }]
-    }),
-    Review.find({ reviewee: user._id }).select('rating')
-  ]);
-
-  const profileData = {
-    ...user.toObject(),
-    totalProducts: userStats[0],
-    totalTransactions: userStats[1],
-    reviews: userStats[2]
-  };
+exports.getUserProducts = catchAsync(async (req, res) => {
+  const products = await Product.find({ seller: req.user._id })
+    .sort('-createdAt');
 
   res.status(200).json({
     status: 'success',
-    data: profileData
+    data: products
+  });
+});
+
+exports.addSellItem = catchAsync(async (req, res) => {
+  const item = await ItemService.addSellItem(req.user._id, req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: item
+  });
+});
+
+exports.addBuyItem = catchAsync(async (req, res) => {
+  const item = await ItemService.addBuyItem(req.user._id, req.body);
+
+  res.status(201).json({
+    status: 'success',
+    data: item
+  });
+});
+
+exports.updateSellItemStock = catchAsync(async (req, res) => {
+  const item = await ItemService.updateSellItemStock(
+    req.user._id,
+    req.params.itemId,
+    req.body.stock
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: item
+  });
+});
+
+exports.updateBuyItemAmount = catchAsync(async (req, res) => {
+  const item = await ItemService.updateBuyItemAmount(
+    req.user._id,
+    req.params.itemId,
+    req.body.amount
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: item
+  });
+});
+
+exports.findNearbySellers = catchAsync(async (req, res) => {
+  const { longitude, latitude, category, radius = 5 } = req.query;
+
+  const sellers = await ItemService.findNearbySellers(
+    [parseFloat(longitude), parseFloat(latitude)],
+    category,
+    parseFloat(radius)
+  );
+
+  res.status(200).json({
+    status: 'success',
+    results: sellers.length,
+    data: sellers
+  });
+});
+
+exports.findNearbyBuyers = catchAsync(async (req, res) => {
+  const { longitude, latitude, category, radius = 5 } = req.query;
+
+  const buyers = await ItemService.findNearbyBuyers(
+    [parseFloat(longitude), parseFloat(latitude)],
+    category,
+    parseFloat(radius)
+  );
+
+  res.status(200).json({
+    status: 'success',
+    results: buyers.length,
+    data: buyers
   });
 });
