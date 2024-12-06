@@ -3,7 +3,7 @@
 const multer = require('multer');
 const sharp = require('sharp');
 const AppError = require('./appError');
-const catchAsync = require('./catchAsync');  // Tambahkan import ini
+const catchAsync = require('./catchAsync');
 
 const multerStorage = multer.memoryStorage();
 
