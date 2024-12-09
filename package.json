@@ -4,7 +4,7 @@
     "description": "Backend API for Upcyclers Application",
     "main": "src/app.js",
     "scripts": {
-        "start": "NODE_ENV=production node ./src/server.js",
+        "start": "node src/app.js",
         "dev": "nodemon src/app.js",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
