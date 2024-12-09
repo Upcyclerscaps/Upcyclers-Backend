@@ -1,33 +1,28 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
-const AppError = require('../utils/appError');
+const multer = require('multer');
+const path = require('path');
 
-exports.validateBody = (schema) => {
-  return (req, res, next) => {
-    const { error } = schema.validate(req.body);
-    if (error) {
-      return next(new AppError(error.details[0].message, 400));
-    }
-    next();
-  };
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()  }-${  Math.round(Math.random() * 1E9)}`;
+    cb(null, `${file.fieldname  }-${  uniqueSuffix  }${path.extname(file.originalname)}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Please upload only images'), false);
+  }
 };
 
-exports.validateParams = (schema) => {
-  return (req, res, next) => {
-    const { error } = schema.validate(req.params);
-    if (error) {
-      return next(new AppError(error.details[0].message, 400));
-    }
-    next();
-  };
-};
-
-exports.validateQuery = (schema) => {
-  return (req, res, next) => {
-    const { error } = schema.validate(req.query);
-    if (error) {
-      return next(new AppError(error.details[0].message, 400));
-    }
-    next();
-  };
-};
+exports.upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});

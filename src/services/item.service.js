@@ -112,5 +112,4 @@ const ItemService = {
   })
 };
 
-// Ganti export default dengan module.exports
 module.exports = ItemService;

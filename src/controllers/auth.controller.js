@@ -1,5 +1,6 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 const catchAsync = require('../utils/catchAsync');
@@ -92,9 +93,6 @@ exports.login = catchAsync(async (req, res, next) => {
 
 exports.updateProfile = catchAsync(async (req, res, next) => {
   try {
-    // Log data yang diterima
-    console.log('Received update data:', req.body);
-
     const updateData = {
       name: req.body.name,
       phone: req.body.phone,
@@ -103,16 +101,15 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
       postalCode: req.body.postalCode
     };
 
+    // Add profileImage if provided
     if (req.body.profileImage) {
       updateData.profileImage = req.body.profileImage;
+      console.log('Updating profile image:', req.body.profileImage); // Debug log
     }
-
-    // Log data yang akan diupdate
-    console.log('Updating user with data:', updateData);
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { $set: updateData },
+      updateData,
       {
         new: true,
         runValidators: true
@@ -122,6 +119,9 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
     if (!updatedUser) {
       return next(new AppError('User tidak ditemukan', 404));
     }
+
+    // Verify update was successful
+    console.log('Updated user:', updatedUser); // Debug log
 
     res.status(200).json({
       status: 'success',

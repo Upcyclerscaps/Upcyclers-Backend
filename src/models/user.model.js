@@ -1,6 +1,5 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
-// src/models/user.model.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -20,6 +19,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
+    minlength: 8,
     select: false
   },
   name: {
@@ -31,6 +31,14 @@ const userSchema = new mongoose.Schema({
   address: String,
   city: String,
   postalCode: String,
+  latitude: {
+    type: Number,
+    required: false
+  },
+  longitude: {
+    type: Number,
+    required: false
+  },
   location: {
     type: {
       type: String,
@@ -39,25 +47,13 @@ const userSchema = new mongoose.Schema({
     },
     coordinates: {
       type: [Number],
-      default: [106.816666, -6.200000] // Default ke Jakarta
-    },
-    address: {
-      type: String,
-      default: ''
-    },
-    radius: {
-      type: Number,
-      default: 5
+      default: [106.816666, -6.200000]
     }
   },
   role: {
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-  },
-  rating: {
-    type: Number,
-    default: 0
   },
   joinedAt: {
     type: Date,
@@ -69,6 +65,31 @@ const userSchema = new mongoose.Schema({
 
 // Index untuk query geospatial
 userSchema.index({ location: '2dsphere' });
+
+// Middleware untuk update location coordinates saat lat/long berubah
+userSchema.pre('save', function (next) {
+  if (this.latitude && this.longitude) {
+    this.location = {
+      type: 'Point',
+      coordinates: [this.longitude, this.latitude]
+    };
+  }
+  next();
+});
+
+// Middleware untuk update pada method findOneAndUpdate
+userSchema.pre('findOneAndUpdate', function (next) {
+  const update = this.getUpdate();
+  if (update.latitude && update.longitude) {
+    this.set({
+      location: {
+        type: 'Point',
+        coordinates: [update.longitude, update.latitude]
+      }
+    });
+  }
+  next();
+});
 
 // Hash password sebelum disimpan
 userSchema.pre('save', async function (next) {

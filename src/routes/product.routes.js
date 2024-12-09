@@ -15,7 +15,7 @@ const {
 
 // Public routes
 router.get('/', getAllProducts);
-router.get('/:id', getProduct);
+router.get('/:id', protect, getProduct);
 
 // Protected routes - harus login
 router.use(protect);

@@ -110,11 +110,35 @@ exports.findNearbySellers = catchAsync(async (req, res) => {
 exports.findNearbyBuyers = catchAsync(async (req, res) => {
   const { longitude, latitude, category, radius = 5 } = req.query;
 
-  const buyers = await ItemService.findNearbyBuyers(
-    [parseFloat(longitude), parseFloat(latitude)],
-    category,
-    parseFloat(radius)
-  );
+  // Validasi input
+  if (!longitude || !latitude) {
+    throw new AppError('Koordinat lokasi diperlukan', 400);
+  }
+
+  const coordinates = [
+    parseFloat(longitude),
+    parseFloat(latitude)
+  ];
+
+  const query = {
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: coordinates
+        },
+        $maxDistance: parseInt(radius) * 1000 // Convert to meters
+      }
+    }
+  };
+
+  // Tambahkan filter kategori jika ada
+  if (category) {
+    query.category = category;
+  }
+
+  const buyers = await User.find(query)
+    .select('name location phone');
 
   res.status(200).json({
     status: 'success',
