@@ -10,6 +10,7 @@ require('dotenv').config();
 
 const config = {
         PORT: process.env.PORT || 5000,
+        HOST: process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
         MONGODB_URI: process.env.MONGODB_URI,
         JWT_SECRET: process.env.JWT_SECRET,
         JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
