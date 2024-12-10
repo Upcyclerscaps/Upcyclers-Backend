@@ -94,16 +94,46 @@ exports.updateBuyItemAmount = catchAsync(async (req, res) => {
 exports.findNearbySellers = catchAsync(async (req, res) => {
   const { longitude, latitude, category, radius = 5 } = req.query;
 
-  const sellers = await ItemService.findNearbySellers(
-    [parseFloat(longitude), parseFloat(latitude)],
-    category,
-    parseFloat(radius)
-  );
+  const products = await Product.find({
+    status: 'available',
+    ...(category && { category }),
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [parseFloat(longitude), parseFloat(latitude)]
+        },
+        $maxDistance: parseInt(radius) * 1000
+      }
+    }
+  }).populate('seller', 'name phone');
 
   res.status(200).json({
     status: 'success',
-    results: sellers.length,
-    data: sellers
+    data: products
+  });
+});
+
+exports.findNearbyBuyers = catchAsync(async (req, res) => {
+  const { longitude, latitude, category, radius = 5 } = req.query;
+
+  const buyOffers = await BuyOffer.find({
+    status: 'active',
+    ...(category && { category }),
+    location: {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [parseFloat(longitude), parseFloat(latitude)]
+        },
+        $maxDistance: parseInt(radius) * 1000
+      }
+    }
+  }).populate('buyer', 'name phone');
+
+  res.status(200).json({
+    status: 'success',
+    data: buyOffers
   });
 });
 
