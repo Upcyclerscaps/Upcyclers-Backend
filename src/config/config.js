@@ -18,5 +18,4 @@ const config = {
         DEFAULT_PAGE_SIZE: 10
 };
 
-test
 module.exports = config;
