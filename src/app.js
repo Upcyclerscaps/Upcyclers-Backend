@@ -14,6 +14,7 @@ const authRoutes = require('./routes/auth.routes');
 const productRoutes = require('./routes/product.routes');
 const userRoutes = require('./routes/user.routes');
 const uploadRoutes = require('./routes/upload.routes');
+const buyOfferRoutes = require('./routes/buy-offer.routes');
 
 const app = express();
 
@@ -38,6 +39,8 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/uploads', uploadRoutes);
+
+app.use('/api/v1/buy-offers', buyOfferRoutes);
 
 // Error Handler
 app.use(errorHandler);

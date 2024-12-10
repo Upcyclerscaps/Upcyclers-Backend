@@ -13,16 +13,15 @@ const {
   getUserProducts
 } = require('../controllers/product.controller');
 
-// Public routes
-router.get('/', getAllProducts);
-router.get('/:id', protect, getProduct);
-
-// Protected routes - harus login
+// Protected routes
 router.use(protect);
-
+router.get('/user', getUserProducts);  // Pindahkan ke atas sebelum route dengan parameter
 router.post('/', createProduct);
 router.patch('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
-router.get('/user', getUserProducts); // Route untuk mendapatkan produk user
+
+// Public routes
+router.get('/', getAllProducts);
+router.get('/:id', getProduct);
 
 module.exports = router;
