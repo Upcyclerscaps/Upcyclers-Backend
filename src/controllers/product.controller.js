@@ -4,8 +4,30 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.getAllProducts = catchAsync(async (req, res) => {
-  const products = await Product.find()
-    .populate('seller', 'name rating')
+  const { longitude, latitude, radius = 5, category } = req.query;
+
+  const query = {};
+
+  // Add location filter if coordinates provided
+  if (longitude && latitude) {
+    query.location = {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [parseFloat(longitude), parseFloat(latitude)]
+        },
+        $maxDistance: parseInt(radius) * 1000
+      }
+    };
+  }
+
+  // Add category filter
+  if (category) {
+    query.category = category;
+  }
+
+  const products = await Product.find(query)
+    .populate('seller', 'name phone')
     .sort('-createdAt');
 
   const transformedProducts = products.map((product) => ({

@@ -10,15 +10,16 @@ const AppError = require('../utils/appError');
 const config = require('../config/config');
 
 const errorHandler = (err, req, res, next) => {
-  console.error('Detailed error:', {
+  console.error('Error details:', {
+    name: err.name,
     message: err.message,
-    stack: err.stack,
-    details: err
+    stack: err.stack
   });
 
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
+  // Differentiate between development and production error messages
   if (process.env.NODE_ENV === 'development') {
     res.status(err.statusCode).json({
       status: err.status,

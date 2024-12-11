@@ -18,8 +18,8 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: 8,
+    required: [true, 'Password harus diisi'],
+    minlength: [8, 'Password minimal 8 karakter'],
     select: false
   },
   name: {
@@ -91,16 +91,15 @@ userSchema.pre('findOneAndUpdate', function (next) {
   next();
 });
 
-// Hash password sebelum disimpan
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
+userSchema.methods.checkPassword = async function (candidatePassword) {
+  if (!this.password) return false;
 
-// Method untuk verifikasi password
-userSchema.methods.checkPassword = async function (inputPassword) {
-  return await bcrypt.compare(inputPassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    console.error('Password check error:', error);
+    return false;
+  }
 };
 
 module.exports = mongoose.model('User', userSchema);

@@ -21,7 +21,31 @@ exports.getUserBuyOffers = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllBuyOffers = catchAsync(async (req, res) => {
-  const buyOffers = await BuyOffer.find().sort('-createdAt');
+  const { longitude, latitude, radius = 5, category } = req.query;
+
+  const query = {};
+
+  // Add location filter if coordinates provided
+  if (longitude && latitude) {
+    query.location = {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [parseFloat(longitude), parseFloat(latitude)]
+        },
+        $maxDistance: parseInt(radius) * 1000
+      }
+    };
+  }
+
+  // Add category filter
+  if (category) {
+    query.category = category;
+  }
+
+  const buyOffers = await BuyOffer.find(query)
+    .populate('buyer', 'name phone')
+    .sort('-createdAt');
 
   res.status(200).json({
     status: 'success',
