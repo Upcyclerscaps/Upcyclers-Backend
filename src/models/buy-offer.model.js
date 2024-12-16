@@ -40,10 +40,13 @@ const buyOfferSchema = new mongoose.Schema({
       default: 'Point'
     },
     coordinates: {
-      type: [Number],
-      default: [0, 0]
+      type: [Number], // [longitude, latitude]
+      required: true
     },
-    address: String
+    address: {
+      type: String,
+      required: true
+    }
   },
   buyer: {
     type: mongoose.Schema.Types.ObjectId,

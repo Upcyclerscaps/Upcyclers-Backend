@@ -1,6 +1,8 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
+/* eslint-disable prefer-const */
+
 const BuyOffer = require('../models/buy-offer.model');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
@@ -21,11 +23,12 @@ exports.getUserBuyOffers = catchAsync(async (req, res, next) => {
 });
 
 exports.getAllBuyOffers = catchAsync(async (req, res) => {
+  console.log('Get buy offers request:', req.query);
+
   const { longitude, latitude, radius = 5, category } = req.query;
 
-  const query = {};
+  let query = {};
 
-  // Add location filter if coordinates provided
   if (longitude && latitude) {
     query.location = {
       $near: {
@@ -38,14 +41,22 @@ exports.getAllBuyOffers = catchAsync(async (req, res) => {
     };
   }
 
-  // Add category filter
   if (category) {
     query.category = category;
   }
 
+  console.log('MongoDB query:', JSON.stringify(query, null, 2));
+
   const buyOffers = await BuyOffer.find(query)
     .populate('buyer', 'name phone')
     .sort('-createdAt');
+
+  console.log('Found buy offers:', buyOffers);
+
+  // Force new response
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
   res.status(200).json({
     status: 'success',
@@ -70,6 +81,15 @@ exports.createBuyOffer = catchAsync(async (req, res) => {
   // Add buyer info from authenticated user
   req.body.buyer = req.user._id;
 
+  // Pastikan ada data lokasi
+  if (!req.body.location || !req.body.location.coordinates) {
+    req.body.location = {
+      type: 'Point',
+      coordinates: [106.816666, -6.200000], // Default Jakarta jika tidak ada koordinat
+      address: req.body.location?.address || ''
+    };
+  }
+
   const buyOffer = await BuyOffer.create(req.body);
 
   res.status(201).json({
@@ -79,10 +99,19 @@ exports.createBuyOffer = catchAsync(async (req, res) => {
 });
 
 exports.updateBuyOffer = catchAsync(async (req, res, next) => {
+  // Update data location jika ada
+  if (req.body.location && !req.body.location.type) {
+    req.body.location = {
+      type: 'Point',
+      coordinates: req.body.location.coordinates || [106.816666, -6.200000],
+      address: req.body.location.address || ''
+    };
+  }
+
   const buyOffer = await BuyOffer.findOneAndUpdate(
     {
       _id: req.params.id,
-      buyer: req.user._id // Only allow update if user is the buyer
+      buyer: req.user._id
     },
     req.body,
     {
