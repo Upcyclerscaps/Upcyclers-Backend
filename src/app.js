@@ -52,4 +52,15 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+// CORS configuration
+app.use(cors({
+  origin: ['http://localhost:9000', 'http://localhost:5000'], // tambahkan domain HTTP yang diizinkan
+  credentials: true
+}));
+
+app.use((req, res, next) => {
+  req.secure = true; // Force treat all requests as secure
+  next();
+});
+
 module.exports = app;
