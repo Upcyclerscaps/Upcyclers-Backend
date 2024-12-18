@@ -99,24 +99,32 @@ exports.updateUserRole = catchAsync(async (req, res, next) => {
     data: user
   });
 });
+// Update user
+exports.updateUser = catchAsync(async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        role: req.body.role
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    ).select('-password');
 
-exports.updateUser = catchAsync(async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  ).select('-password');
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
 
-  if (!user) {
-    throw new AppError('User not found', 404);
+    res.status(200).json({
+      status: 'success',
+      data: user
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return next(new AppError('Error updating user', 500));
   }
-
-  // Tambahkan flag untuk trigger logout
-  res.status(200).json({
-    status: 'success',
-    data: user,
-    requireLogout: true
-  });
 });
 
 exports.deleteUser = catchAsync(async (req, res) => {
