@@ -125,7 +125,10 @@ exports.getUserProducts = catchAsync(async (req, res) => {
       seller: req.user._id.toString() // Ensure proper type conversion
     })
       .sort('-createdAt');
-    
+
+    // Debug log
+    console.log(`Found ${products.length} products`);
+
     res.status(200).json({
       status: 'success',
       results: products.length,

@@ -1,6 +1,5 @@
 /* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
-// src/controllers/admin.controller.js
 const User = require('../models/user.model');
 const Product = require('../models/product.model');
 const BuyOffer = require('../models/buy-offer.model');
@@ -99,10 +98,11 @@ exports.updateUserRole = catchAsync(async (req, res, next) => {
     data: user
   });
 });
+
 // Update user
 exports.updateUser = catchAsync(async (req, res) => {
   const { password, ...otherFields } = req.body;
-  
+
   // Hash password if provided
   if (password) {
     otherFields.password = await bcrypt.hash(password, 12);
