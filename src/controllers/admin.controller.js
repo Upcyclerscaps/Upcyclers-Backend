@@ -8,25 +8,39 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
 exports.getDashboardStats = catchAsync(async (req, res) => {
-  const stats = {
-    usersCount: await User.countDocuments(),
-    productsCount: await Product.countDocuments({ status: 'available' }),
-    buyOffersCount: await BuyOffer.countDocuments({ status: 'active' })
-  };
+  try {
+    // Get counts
+    const [usersCount, productsCount, buyOffersCount] = await Promise.all([
+      User.countDocuments(),
+      Product.countDocuments(),
+      BuyOffer.countDocuments()
+    ]);
 
-  const [latestProducts, latestBuyOffers] = await Promise.all([
-    Product.find().sort('-createdAt').limit(5).populate('seller', 'name'),
-    BuyOffer.find().sort('-createdAt').limit(5).populate('buyer', 'name profileImage')
-  ]);
+    // Get latest items
+    const [latestUsers, latestProducts] = await Promise.all([
+      User.find().select('-password').limit(5).sort({ createdAt: -1 }),
+      Product.find().limit(5).sort({ createdAt: -1 })
+    ]);
 
-  res.status(200).json({
-    status: 'success',
-    data: {
-      stats,
-      latestProducts,
-      latestBuyOffers
-    }
-  });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats: {
+          usersCount,
+          productsCount,
+          buyOffersCount
+        },
+        latestUsers,
+        latestProducts
+      }
+    });
+  } catch (error) {
+    console.error('Error getting dashboard stats:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error getting dashboard stats'
+    });
+  }
 });
 
 exports.getAllUsers = catchAsync(async (req, res) => {
