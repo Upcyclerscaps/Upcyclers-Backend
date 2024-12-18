@@ -1,3 +1,4 @@
+/* eslint-disable linebreak-style */
 /* eslint-disable no-undef */
 const Product = require('../models/product.model');
 const catchAsync = require('../utils/catchAsync');
@@ -27,6 +28,7 @@ exports.getAllProducts = catchAsync(async (req, res) => {
   }
 
   const products = await Product.find(query)
+    .select('name category description price stock location images seller status createdAt')
     .populate('seller', 'name phone')
     .sort('-createdAt');
 
@@ -36,7 +38,7 @@ exports.getAllProducts = catchAsync(async (req, res) => {
     category: product.category,
     description: product.description,
     price: product.price,
-    quantity: product.quantity,
+    stock: product.stock,
     location: product.location,
     images: product.images,
     seller: product.seller,
@@ -123,10 +125,7 @@ exports.getUserProducts = catchAsync(async (req, res) => {
       seller: req.user._id.toString() // Ensure proper type conversion
     })
       .sort('-createdAt');
-
-    // Debug log
-    console.log(`Found ${products.length} products`);
-
+    
     res.status(200).json({
       status: 'success',
       results: products.length,
