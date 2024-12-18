@@ -11,7 +11,7 @@ const fs = require('fs');
 const config = require('./config/config');
 const connectDB = require('./config/database');
 const routes = require('./routes/index');
-@@ -39,28 +39,33 @@ app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/uploads', uploadRoutes);
