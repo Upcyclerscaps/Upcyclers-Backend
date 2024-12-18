@@ -43,19 +43,20 @@ exports.getDashboardStats = catchAsync(async (req, res) => {
   }
 });
 
-exports.getAllUsers = catchAsync(async (req, res) => {
-  const users = await User.find()
-    .select('-password')
-    .sort('-createdAt');
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  try {
+    const users = await User.find()
+      .select('-password')
+      .sort({ createdAt: -1 });
 
-  res.status(200).json({
-    status: 'success',
-    data: users,
-    pagination: {
-      total: users.length,
-      limit: 5
-    }
-  });
+    res.status(200).json({
+      status: 'success',
+      data: users
+    });
+  } catch (error) {
+    console.error('Error getting users:', error);
+    return next(new AppError('Error getting users', 500));
+  }
 });
 
 exports.getUser = catchAsync(async (req, res, next) => {
