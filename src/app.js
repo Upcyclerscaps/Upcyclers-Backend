@@ -28,7 +28,7 @@ app.listen(PORT, () => {
 // CORS configuration
 app.use(cors({
   origin: ['http://localhost:9000', 'http://localhost:5000'], // tambahkan domain HTTP yang diizinkan
-  origin: ['https://upcyclers.myvnc.com', 'https://localhost:5000'], // Update to allow your frontend domain
+  origin: ['https://upcyclers.zapto.org', 'https://localhost:5000'], // Update to allow your frontend domain
   credentials: true
 }));
 
@@ -42,12 +42,12 @@ app.use((req, res, next) => {
 module.exports = app;
 // Read SSL certificate and key for HTTPS
 const sslOptions = {
-  cert: fs.readFileSync('/etc/letsencrypt/live/upcyclers.myvnc.com/fullchain.pem'),
-  key: fs.readFileSync('/etc/letsencrypt/live/upcyclers.myvnc.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/upcyclers.zapto.org/fullchain.pem'),
+  key: fs.readFileSync('/etc/letsencrypt/live/upcyclers.zapto.org/privkey.pem'),
 };
 // Start HTTPS server
 const PORT = config.PORT || 5000;
 https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`Backend server is running on https://upcyclers.myvnc.com:${PORT}`);
+  console.log(`Backend server is running on https://upcyclers.zapto.org:${PORT}`);
 });
 module.exports = app;
