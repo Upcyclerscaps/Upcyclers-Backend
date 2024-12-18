@@ -127,17 +127,23 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   }
 });
 
-exports.deleteUser = catchAsync(async (req, res) => {
-  const user = await User.findByIdAndDelete(req.params.id);
+// Delete user
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
 
-  if (!user) {
-    throw new AppError('User not found', 404);
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return next(new AppError('Error deleting user', 500));
   }
-
-  res.status(204).json({
-    status: 'success',
-    data: null
-  });
 });
 
 exports.getAllProducts = catchAsync(async (req, res) => {
