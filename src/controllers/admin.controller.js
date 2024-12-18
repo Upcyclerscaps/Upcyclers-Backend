@@ -100,31 +100,31 @@ exports.updateUserRole = catchAsync(async (req, res, next) => {
   });
 });
 // Update user
-exports.updateUser = catchAsync(async (req, res, next) => {
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        role: req.body.role
-      },
-      {
-        new: true,
-        runValidators: true
-      }
-    ).select('-password');
-
-    if (!user) {
-      return next(new AppError('User not found', 404));
-    }
-
-    res.status(200).json({
-      status: 'success',
-      data: user
-    });
-  } catch (error) {
-    console.error('Error updating user:', error);
-    return next(new AppError('Error updating user', 500));
+exports.updateUser = catchAsync(async (req, res) => {
+  const { password, ...otherFields } = req.body;
+  
+  // Hash password if provided
+  if (password) {
+    otherFields.password = await bcrypt.hash(password, 12);
   }
+
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    otherFields,
+    {
+      new: true,
+      runValidators: true
+    }
+  ).select('-password');
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: user
+  });
 });
 
 // Delete user
