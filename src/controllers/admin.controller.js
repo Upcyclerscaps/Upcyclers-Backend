@@ -3,6 +3,7 @@
 const User = require('../models/user.model');
 const Product = require('../models/product.model');
 const BuyOffer = require('../models/buy-offer.model');
+const bcrypt = require('bcryptjs');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -16,9 +17,10 @@ exports.getDashboardStats = catchAsync(async (req, res) => {
     ]);
 
     // Get latest items
-    const [latestUsers, latestProducts] = await Promise.all([
+    const [latestUsers, latestProducts, latestBuyOffers] = await Promise.all([
       User.find().select('-password').limit(5).sort({ createdAt: -1 }),
-      Product.find().limit(5).sort({ createdAt: -1 })
+      Product.find().limit(5).sort({ createdAt: -1 }),
+      BuyOffer.find().limit(5).sort({ createdAt: -1 }) // Fetch latest buy offers
     ]);
 
     res.status(200).json({
@@ -30,7 +32,8 @@ exports.getDashboardStats = catchAsync(async (req, res) => {
           buyOffersCount
         },
         latestUsers,
-        latestProducts
+        latestProducts,
+        latestBuyOffers // Include latest buy offers in the response
       }
     });
   } catch (error) {
@@ -100,17 +103,22 @@ exports.updateUserRole = catchAsync(async (req, res, next) => {
 });
 
 // Update user
-exports.updateUser = catchAsync(async (req, res) => {
+exports.updateUser = catchAsync(async (req, res, next) => {
   const { password, ...otherFields } = req.body;
+  const updateData = { ...otherFields };
 
-  // Hash password if provided
+  // Jika ada password baru, hash password
   if (password) {
-    otherFields.password = await bcrypt.hash(password, 12);
+    try {
+      updateData.password = await bcrypt.hash(password, 12);
+    } catch (error) {
+      return next(new AppError('Error hashing password', 500));
+    }
   }
 
   const user = await User.findByIdAndUpdate(
     req.params.id,
-    otherFields,
+    updateData,
     {
       new: true,
       runValidators: true
@@ -126,6 +134,7 @@ exports.updateUser = catchAsync(async (req, res) => {
     data: user
   });
 });
+
 
 // Delete user
 exports.deleteUser = catchAsync(async (req, res, next) => {
