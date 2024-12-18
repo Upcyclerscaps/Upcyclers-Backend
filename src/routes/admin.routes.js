@@ -10,11 +10,10 @@ const adminController = require('../controllers/admin.controller');
 router.use(protect);
 router.use(checkRole(['admin']));
 
-// User Management
-router.get('/users', adminController.getAllUsers); // Endpoint untuk list users
-router.get('/users/:id', adminController.getUser); // Endpoint untuk single user
+// Users routes
+router.get('/users', adminController.getAllUsers);
+router.get('/users/:id', adminController.getUser);
 router.patch('/users/:id', adminController.updateUser);
-router.patch('/users/:id/role', adminController.updateUserRole);
 router.delete('/users/:id', adminController.deleteUser);
 
 // Dashboard
