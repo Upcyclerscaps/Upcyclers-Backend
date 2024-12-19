@@ -4,12 +4,6 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: [true, 'Username is required'],
-    unique: true,
-    trim: true
-  },
   email: {
     type: String,
     required: [true, 'Email is required'],
@@ -24,7 +18,8 @@ const userSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: [true, 'Name is required']
+    required: [true, 'Name is required'],
+    minlength: [3, 'Nama minimal 3 karakter']
   },
   phone: String,
   profileImage: String,
@@ -47,7 +42,7 @@ const userSchema = new mongoose.Schema({
     },
     coordinates: {
       type: [Number],
-      default: [106.816666, -6.200000]
+      default: [106.816666, -6.200000]  // Default ke Jakarta
     }
   },
   role: {
@@ -66,15 +61,26 @@ const userSchema = new mongoose.Schema({
 // Index untuk query geospatial
 userSchema.index({ location: '2dsphere' });
 
-// Middleware untuk update location coordinates saat lat/long berubah
-userSchema.pre('save', function (next) {
-  if (this.latitude && this.longitude) {
-    this.location = {
-      type: 'Point',
-      coordinates: [this.longitude, this.latitude]
-    };
+// Middleware untuk hash password sebelum save
+userSchema.pre('save', async function (next) {
+  // Hanya hash password jika password dimodifikasi
+  if (!this.isModified('password')) return next();
+
+  try {
+    this.password = await bcrypt.hash(this.password, 12);
+
+    // Update location jika ada lat/long
+    if (this.latitude && this.longitude) {
+      this.location = {
+        type: 'Point',
+        coordinates: [this.longitude, this.latitude]
+      };
+    }
+
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 });
 
 // Middleware untuk update pada method findOneAndUpdate
@@ -91,6 +97,7 @@ userSchema.pre('findOneAndUpdate', function (next) {
   next();
 });
 
+// Method untuk verifikasi password
 userSchema.methods.checkPassword = async function (candidatePassword) {
   if (!this.password) return false;
 

@@ -14,53 +14,35 @@ const signToken = (id) => {
 };
 
 exports.register = catchAsync(async (req, res, next) => {
-  const { username, email, password, name } = req.body;
-  console.log('Register attempt:', { username, email, name }); // Log for debugging
-
   try {
-    // Check existing user
-    const existingUser = await User.findOne({
-      $or: [
-        { email: email.toLowerCase() },
-        { username: username.toLowerCase() }
-      ]
-    });
-
+    // Check if email exists
+    const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
-      console.log('Existing user found:', {
-        existingEmail: existingUser.email,
-        existingUsername: existingUser.username
-      });
-      return next(new AppError('Email atau username sudah terdaftar', 400));
+      return next(new AppError('Email sudah terdaftar', 400));
     }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
     const user = await User.create({
-      username: username.toLowerCase(),
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      name
+      name: req.body.name,
+      email: req.body.email,
+      password: req.body.password
     });
 
-    // Generate token
-    const token = signToken(user._id);
-
-    // Remove password from output
     user.password = undefined;
 
     res.status(201).json({
       status: 'success',
-      token,
-      data: {
-        user
-      }
+      message: 'Registrasi berhasil',
+      data: { user }
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    // Handle MongoDB errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return next(new AppError(`${field} sudah digunakan`, 400));
+    }
+
     return next(new AppError('Gagal melakukan registrasi', 500));
   }
 });
