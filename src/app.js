@@ -2,6 +2,8 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 const express = require('express');
+const swaggerUI = require('swagger-ui-express');
+const swaggerSpecs = require('./config/swagger');
 const cors = require('cors');
 const morgan = require('morgan');
 const helmet = require('helmet');
@@ -44,6 +46,9 @@ app.use('/api/v1/uploads', uploadRoutes);
 
 app.use('/api/v1/buy-offers', buyOfferRoutes);
 app.use('/api/v1/admin', adminRoutes);
+
+// Swagger documentation route
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs));
 
 // Error Handler
 app.use(errorHandler);
