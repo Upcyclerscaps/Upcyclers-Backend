@@ -8,16 +8,12 @@ const options = {
     info: {
       title: 'Upcyclers API Documentation',
       version: '1.0.0',
-      description: 'API documentation untuk aplikasi Upcyclers',
-      contact: {
-        name: 'Admin Upcyclers',
-        email: 'admin@upcyclers.com'
-      },
+      description: 'API documentation untuk aplikasi Upcyclers'
     },
     servers: [
       {
         url: 'https://upcyclers.servehttp.com/api/v1',
-        description: 'Development server'
+        description: 'Production server'
       }
     ],
     components: {
@@ -30,7 +26,7 @@ const options = {
       }
     }
   },
-  apis: ['./src/routes/*.js'] // path ke file route
+  apis: ['./src/routes/*.js']
 };
 
 const swaggerSpecs = swaggerJsDoc(options);

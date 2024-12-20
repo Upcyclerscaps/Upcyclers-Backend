@@ -26,12 +26,32 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
-app.use(helmet());
+app.use(cors({
+  origin: 'https://upcyclers.servehttp.com',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
 app.use(xss());
+
+// Base route
+app.get('/rest-api', (req, res) => {
+  res.json({
+    message: 'Welcome to Upcyclers API',
+    version: '1.0.0'
+  });
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy' });
+});
 
 // Development logging
 if (config.NODE_ENV === 'development') {
@@ -48,7 +68,12 @@ app.use('/api/v1/buy-offers', buyOfferRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
 // Swagger documentation route
-app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs));
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpecs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  swaggerOptions: {
+    docExpansion: 'none'
+  }
+}));
 
 // Error Handler
 app.use(errorHandler);
@@ -64,7 +89,8 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.statusCode || 500).json({
     status: 'error',
-    message: err.message
+    message: err.message || 'Internal server error',
+    ...(config.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
 
